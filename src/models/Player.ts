@@ -3,7 +3,7 @@ import Deck from "./Deck";
 import Exchange from "./Exchange";
 import prompts from "prompts";
 
-export default class Player {
+export default abstract class Player {
   private _name: string;
   private _hand: Card[] = [];
   private _points: number = 0;
@@ -43,22 +43,10 @@ export default class Player {
     this._usedExchange = value;
   }
 
-  private async select(hand: Card[]): Promise<Card> {
-    const userInput: number = await (async () => {
-      const res = await prompts({
-        type: "number",
-        name: "showCard",
-        message: `${this.printHandCards()}\nPlz select the card you would like to show: `,
-        validate: (name) =>
-          name >= 1 && name <= hand.length ? true : "invalid number",
-      });
-      return res.showCard;
-    })();
-    const showCardIdx = userInput - 1;
-    return this.hand.splice(showCardIdx, 1)[0];
-  }
+  protected abstract select(): Card | Promise<Card>;
 
-  private printHandCards(): string {
+  protected printHandCards(): string {
+    // TODO: show card suit
     let message = ``;
     this.hand.forEach((card, i) => {
       message += `\n${i + 1}. ${card.suit} ${card.rank}`;
@@ -67,6 +55,7 @@ export default class Player {
   }
 
   public async nameSelf(): Promise<void> {
+    // TODO: do not ask name for AI players
     const userInput: string = await (async () => {
       const res = await prompts({
         type: "text",
@@ -91,7 +80,7 @@ export default class Player {
   }
 
   public async show(): Promise<Card> {
-    return await this.select(this.hand);
+    return await this.select();
   }
 
   public gainPoints(): void {
@@ -108,5 +97,37 @@ export default class Player {
     player1.hand = player2.hand;
     player2.hand = handOfPlayer1;
     return new Exchange(player1, player2, changeBack);
+  }
+}
+
+export class HumanPlayer extends Player {
+  constructor() {
+    super();
+  }
+  protected async select(): Promise<Card> {
+    const userInput: number = await (async () => {
+      const res = await prompts({
+        type: "number",
+        name: "showCard",
+        message: `${this.printHandCards()}\n${
+          this.name
+        }: plz select the card you would like to show: `,
+        validate: (name) =>
+          name >= 1 && name <= this.hand.length ? true : "invalid number",
+      });
+      return res.showCard;
+    })();
+    const showCardIdx = userInput - 1;
+    return this.hand.splice(showCardIdx, 1)[0];
+  }
+}
+
+export class AIPlayer extends Player {
+  constructor() {
+    super();
+  }
+  protected select(): Card {
+    const showCardIdx: number = Math.floor(Math.random() * this.hand.length);
+    return this.hand.splice(showCardIdx, 1)[0];
   }
 }
