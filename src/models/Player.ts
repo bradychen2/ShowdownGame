@@ -2,6 +2,8 @@ import Card from "./Card";
 import Deck from "./Deck";
 import Exchange from "./Exchange";
 import prompts from "prompts";
+import { SuitsSymbols } from "./Card";
+import { faker } from "@faker-js/faker";
 
 export default abstract class Player {
   private _name: string;
@@ -46,32 +48,14 @@ export default abstract class Player {
   protected abstract select(): Card | Promise<Card>;
 
   protected printHandCards(): string {
-    // TODO: show card suit
     let message = ``;
     this.hand.forEach((card, i) => {
-      message += `\n${i + 1}. ${card.suit} ${card.rank}`;
+      message += `\n${i + 1}. ${SuitsSymbols[card.suit]} ${card.rank}`;
     });
     return message;
   }
 
-  public async nameSelf(): Promise<void> {
-    // TODO: do not ask name for AI players
-    const userInput: string = await (async () => {
-      const res = await prompts({
-        type: "text",
-        name: "name",
-        message: "Plz enter your name (not more than 30 chars): ",
-        validate: (name: string) => {
-          return 0 < name.length && name.length <= 30
-            ? true
-            : `length of name cannot be longer than 30 chars`;
-        },
-      });
-      console.log(`Hi, ${res.name}!!`);
-      return res.name;
-    })();
-    this.name = userInput;
-  }
+  public abstract nameSelf(): Promise<void> | void;
 
   public drawCard(deck: Deck): Card | null {
     const draw = deck.cards.pop();
@@ -120,6 +104,24 @@ export class HumanPlayer extends Player {
     const showCardIdx = userInput - 1;
     return this.hand.splice(showCardIdx, 1)[0];
   }
+
+  public async nameSelf(): Promise<void> {
+    const userInput: string = await (async () => {
+      const res = await prompts({
+        type: "text",
+        name: "name",
+        message: "Plz enter your name (not more than 30 chars): ",
+        validate: (name: string) => {
+          return 0 < name.length && name.length <= 30
+            ? true
+            : `length of name cannot be longer than 30 chars`;
+        },
+      });
+      console.log(`Hi, ${res.name}!!`);
+      return res.name;
+    })();
+    this.name = userInput;
+  }
 }
 
 export class AIPlayer extends Player {
@@ -129,5 +131,8 @@ export class AIPlayer extends Player {
   protected select(): Card {
     const showCardIdx: number = Math.floor(Math.random() * this.hand.length);
     return this.hand.splice(showCardIdx, 1)[0];
+  }
+  public nameSelf(): void | Promise<void> {
+    this.name = faker.name.fullName();
   }
 }

@@ -6,6 +6,12 @@ export enum Suits {
   "diamond" = 2,
   "club" = 1,
 }
+export enum SuitsSymbols {
+  "spade" = "♠️",
+  "heart" = "♥️",
+  "diamond" = "♦️",
+  "club" = "♣️",
+}
 
 export const RuleMap: Map<number, number> = new Map([[1, 14]]);
 
@@ -56,6 +62,7 @@ export default class Card {
       }
     });
     const idxOfBiggest = showCard.indexOf(biggest);
+    console.log(`${players[idxOfBiggest].name} got this round!!`);
     return players[idxOfBiggest];
   }
 }

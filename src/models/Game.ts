@@ -2,7 +2,7 @@ import internal from "stream";
 import Deck from "./Deck";
 import Exchange from "./Exchange";
 import Player, { HumanPlayer, AIPlayer } from "./Player";
-import Card, { SuitsRanks } from "./Card";
+import Card, { SuitsRanks, SuitsSymbols } from "./Card";
 import { promptOfExchangeHands } from "../prompts/prompts";
 import prompts from "prompts";
 
@@ -89,16 +89,16 @@ export default class Game {
    */
   public async takeTurns(): Promise<void> {
     const showCards: Card[] = [];
+    console.log(`\nROUND - ${14 - this.round}\n`);
     // check if any change back
-    this.triggerChangeBack();
+    if (this._waitingExchange.length !== 0) this.triggerChangeBack();
 
     for (let player of this.players) {
       // if player hasn't used exchange yet, can decide to exchange hands with someone
       if (!player.usedExchange) {
         let isExchange: number;
         let targetPlayerNum: number | undefined;
-        // TODO: Fix, never goes into this
-        if (typeof player === typeof HumanPlayer) {
+        if (player instanceof HumanPlayer) {
           const userInput = await (async () => {
             const res = await promptOfExchangeHands(this.players, player);
             return res;
@@ -118,11 +118,11 @@ export default class Game {
           const exchange = player.exchangeHands(
             player,
             this.players[targetPlayerNum - 1], // subtract 1 to idx
-            this.round + 3 // change back after 3 rounds
+            this.round - 3 // change back after 3 rounds
           );
           this.addWaitingExchange(exchange);
+          player.usedExchange = true;
         }
-        player.usedExchange = true;
       }
       // show the selected card
       if (player.hand.length !== 0) {
@@ -146,7 +146,7 @@ export default class Game {
         winner = this.players[i];
       }
     }
-    console.log(`The winner is ${winner.name}!!!`);
+    console.log(`===== The winner is ${winner.name}!!! =====`);
   }
 
   /**
@@ -156,7 +156,7 @@ export default class Game {
     this._waitingExchange.forEach((exchange) => {
       if (exchange.changeBackRound === this.round) {
         console.log(
-          `change back hands between ${exchange.initiator} and ${exchange.target}\n`
+          `change back hands between ${exchange.initiator.name} and ${exchange.target.name}\n`
         );
         exchange.changeBack();
       }
@@ -167,8 +167,9 @@ export default class Game {
     for (let i = 0; i < showCards.length; i += 1) {
       const player = this.players[i];
       const showCard = showCards[i];
-      // TODO: show suit symbol
-      console.log(`${player.name} shows: ${showCard.suit} ${showCard.rank}`);
+      console.log(
+        `${player.name} shows: ${SuitsSymbols[showCard.suit]} ${showCard.rank}`
+      );
     }
     console.log("\r");
   }
