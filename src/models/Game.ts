@@ -2,28 +2,29 @@ import internal from "stream";
 import Deck from "./Deck";
 import Exchange from "./Exchange";
 import Player from "./Player";
-import Card, { Suits, SuitsRanks } from "./Card";
-import prompts from "prompts";
+import Card, { SuitsRanks } from "./Card";
+import { promptOfExchangeHands } from "../prompts/prompts";
 
 export default class Game {
-  private _players: Player[];
+  private _players: Player[] = [];
   private _deck: Deck;
   private _round: number = 13;
-  private _waitingExchange: Exchange[];
+  private _waitingExchange: Exchange[] = [];
 
   constructor() {
     this._deck = this.initDeck();
   }
   private initDeck(): Deck {
     const deck = new Deck();
-    const suitsKeys = Object.keys(Suits);
-    for (let suit of suitsKeys) {
+    const suits = ["spade", "heart", "diamond", "club"];
+    for (let suit of suits) {
       for (let rank = 1; rank <= 13; rank += 1) {
         deck.addCard(new Card(rank, suit as SuitsRanks));
       }
     }
     return deck;
   }
+
   /**
    * getter and setter
    */
@@ -42,91 +43,85 @@ export default class Game {
   public addWaitingExchange(exchange: Exchange) {
     this._waitingExchange.push(exchange);
   }
+
   /**
    * Game initiator
    */
-  public initGame(players: Player[]): void {
-    players.forEach(async (player) => {
+  public async initGame(): Promise<void> {
+    this.createPlayers();
+    for (let player of this.players) {
       await player.nameSelf();
-    });
+    }
     this._deck.shuffle();
     while (this._deck.cards.length !== 0) {
-      players.forEach((player) => {
+      this.players.forEach((player) => {
         player.drawCard(this._deck);
       });
     }
   }
+
+  /**
+   * utils of game initiator
+   */
+  private createPlayers() {
+    for (let i = 0; i <= 3; i += 1) {
+      this.players.push(new Player());
+    }
+  }
+
   /**
    * Game controller
    */
-  public takeTurns(players: Player[]): void {
+  public async takeTurns(): Promise<void> {
     const showCards: Card[] = [];
+    // check if any change back
     this.triggerChangeBack();
-    players.forEach(async (player) => {
+
+    for (let player of this.players) {
+      // if player hasn't used exchange yet, can decide to exchange hands with someone
       if (!player.usedExchange) {
         const userInput = await (async () => {
-          const res = await prompts([
-            {
-              type: "number",
-              name: "isExchange",
-              message:
-                "Would you like to exchange hands with someone? (Yes: 1; No: 0): ",
-              validate: (name) =>
-                0 <= name && name <= 1
-                  ? true
-                  : `Do not type anything other than 0 or 1.`,
-            },
-            {
-              type: "number",
-              name: "player",
-              message: `
-								1.${players[0].name}\n
-								2.${players[1].name}\n
-								3.${players[2].name}\n
-								4.${players[3].name}\n
-								Which player do you want to exchange hands with? (input: 1 ~ 4): 
-								`,
-              validate: (name) => {
-                if (1 >= name && name >= 4) {
-                  return "Plz enter number between 1 to 4";
-                }
-                if (name === this.players.indexOf(player) + 1) {
-                  return "cannot exchange hands with yourself";
-                }
-                return true;
-              },
-            },
-          ]);
+          const res = await promptOfExchangeHands(this.players, player);
           return res;
         })();
         const isExchange: number = userInput.isExchange;
-        const targetPlayer: number = userInput.player - 1;
-        if (isExchange) {
+        const targetPlayerNum: number | undefined = userInput.player
+          ? userInput.player
+          : undefined;
+        if (isExchange && targetPlayerNum) {
           const exchange = player.exchangeHands(
             player,
-            this.players[targetPlayer],
+            this.players[targetPlayerNum - 1], // subtract 1 to idx
             this.round + 3 // change back after 3 rounds
           );
           this.addWaitingExchange(exchange);
         }
       }
-      const showCard = await player.show();
-      showCards.push(showCard);
-    });
+      // show the selected card
+      if (player.hand.length !== 0) {
+        const showCard = await player.show();
+        showCards.push(showCard);
+      }
+    }
     this.displayShows(showCards);
+    // the winner gets one point in this round
     const winnerThisRound = Card.showdown(showCards, this.players);
     winnerThisRound.gainPoints();
     this._round -= 1;
   }
+
   public endGame(): void {
     let winner: Player = this.players[0];
+    console.log(`${winner.name}: ${winner.points} pts`);
     for (let i = 1; i < this.players.length; i += 1) {
+      console.log(`${this.players[i].name}: ${this.players[i].points} pts`);
       if (this.players[i].points > winner.points) {
         winner = this.players[i];
       }
     }
     console.log(`The winner is ${winner.name}!!!`);
   }
+
   /**
    * utils of Game controller
    */
@@ -134,17 +129,19 @@ export default class Game {
     this._waitingExchange.forEach((exchange) => {
       if (exchange.changeBackRound === this.round) {
         console.log(
-          `change back hands between ${exchange.initiator} and ${exchange.target}`
+          `change back hands between ${exchange.initiator} and ${exchange.target}\n`
         );
         exchange.changeBack();
       }
     });
   }
   private displayShows(showCards: Card[]): void {
+    console.log("\r");
     for (let i = 0; i < showCards.length; i += 1) {
       const player = this.players[i];
       const showCard = showCards[i];
       console.log(`${player.name} shows: ${showCard.suit} ${showCard.rank}`);
     }
+    console.log("\r");
   }
 }

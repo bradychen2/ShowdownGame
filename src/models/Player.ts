@@ -48,10 +48,7 @@ export default class Player {
       const res = await prompts({
         type: "number",
         name: "showCard",
-        message: `
-					${this.printHandCards()}
-					Plz select the card you would like to show: 
-				`,
+        message: `${this.printHandCards()}\nPlz select the card you would like to show: `,
         validate: (name) =>
           name >= 1 && name <= hand.length ? true : "invalid number",
       });
@@ -64,7 +61,7 @@ export default class Player {
   private printHandCards(): string {
     let message = ``;
     this.hand.forEach((card, i) => {
-      message += `${i + 1}. ${card.suit} ${card.rank}\n`;
+      message += `\n${i + 1}. ${card.suit} ${card.rank}`;
     });
     return message;
   }
@@ -106,6 +103,7 @@ export default class Player {
     player2: Player,
     changeBack: number
   ): Exchange {
+    console.log(`${player1.name} changes hands with ${player2.name}`);
     const handOfPlayer1 = player1.hand;
     player1.hand = player2.hand;
     player2.hand = handOfPlayer1;
