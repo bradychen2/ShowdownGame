@@ -141,7 +141,9 @@ export default class Game {
       const player = this.players[i];
       const showCard = showCards[i];
       console.log(
-        `${player.name} shows: ${SuitsSymbols[showCard.suit]} ${showCard.rank}`
+        `${showCard.owner.name} shows: ${SuitsSymbols[showCard.suit]} ${
+          showCard.rank
+        }`
       );
     }
     console.log("\r");

@@ -20,6 +20,7 @@ export type SuitsRanks = keyof typeof Suits;
 export default class Card {
   private _rank: number;
   private _suit: SuitsRanks;
+  private _owner: Player;
 
   public get suit(): SuitsRanks {
     return this._suit;
@@ -27,6 +28,13 @@ export default class Card {
 
   public get rank(): number {
     return this._rank;
+  }
+
+  public get owner(): Player {
+    return this._owner;
+  }
+  public set owner(player: Player) {
+    this._owner = player;
   }
 
   constructor(rank: number, suit: SuitsRanks) {
@@ -61,8 +69,7 @@ export default class Card {
         }
       }
     });
-    const idxOfBiggest = showCard.indexOf(biggest);
-    console.log(`${players[idxOfBiggest].name} got this round!!`);
-    return players[idxOfBiggest];
+    console.log(`${biggest.owner.name} got this round!!`);
+    return biggest.owner;
   }
 }

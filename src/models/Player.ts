@@ -60,7 +60,10 @@ export default abstract class Player {
 
   public drawCard(deck: Deck): Card | null {
     const draw = deck.cards.pop();
-    if (draw !== undefined) this.addHand(draw);
+    if (draw !== undefined) {
+      this.addHand(draw);
+      draw.owner = this;
+    }
     return draw || null;
   }
 
@@ -91,6 +94,12 @@ export default abstract class Player {
     const handOfPlayer1 = player1.hand;
     player1.hand = player2.hand;
     player2.hand = handOfPlayer1;
+    for (let card of player1.hand) {
+      card.owner = player1;
+    }
+    for (let card of player2.hand) {
+      card.owner = player2;
+    }
     this.usedExchange = true;
     return new Exchange(player1, player2, changeBack);
   }
