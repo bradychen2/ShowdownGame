@@ -3,11 +3,10 @@ import Deck from "./Deck";
 import Exchange from "./Exchange";
 import Player, { HumanPlayer, AIPlayer } from "./Player";
 import Card, { SuitsRanks, SuitsSymbols } from "./Card";
-import { promptOfExchangeHands } from "../prompts/prompts";
-import prompts from "prompts";
+import { promptsOfCreatePlayer } from "../prompts/prompts";
 
 export default class Game {
-  private _players: Player[] = [];
+  private _players: Array<HumanPlayer | AIPlayer> = [];
   private _deck: Deck;
   private _round: number = 13;
   private _waitingExchange: Exchange[] = [];
@@ -29,11 +28,11 @@ export default class Game {
   /**
    * getter and setter
    */
-  public get players(): Player[] {
+  public get players(): Array<HumanPlayer | AIPlayer> {
     return this._players;
   }
-  public addPlayers(players: Player) {
-    this._players.push(players);
+  public addPlayers(player: HumanPlayer | AIPlayer) {
+    this._players.push(player);
   }
   public get deck(): Deck {
     return this._deck;
@@ -65,16 +64,7 @@ export default class Game {
    * utils of game initiator
    */
   private async createPlayers() {
-    const userInput = await prompts({
-      type: "number",
-      name: "humanCount",
-      message: `How many human players in this game? `,
-      validate: (name) => {
-        if (name < 1) return `Need at least 1 human player`;
-        if (name > 4) return `At most 4 players in a game`;
-        return true;
-      },
-    });
+    const userInput = await promptsOfCreatePlayer();
     const aiCount = 4 - userInput.humanCount;
     for (let i = 1; i <= userInput.humanCount; i += 1) {
       this.players.push(new HumanPlayer());
@@ -96,24 +86,8 @@ export default class Game {
     for (let player of this.players) {
       // if player hasn't used exchange yet, can decide to exchange hands with someone
       if (!player.usedExchange) {
-        let isExchange: number;
-        let targetPlayerNum: number | undefined;
-        if (player instanceof HumanPlayer) {
-          const userInput = await (async () => {
-            const res = await promptOfExchangeHands(this.players, player);
-            return res;
-          })();
-          isExchange = userInput.isExchange;
-          targetPlayerNum = userInput.player ? userInput.player : undefined;
-        } else {
-          // AIPlayer
-          isExchange = Math.floor(Math.random() * 2);
-          const randomTarget = Math.floor(Math.random() * 5);
-          targetPlayerNum =
-            randomTarget - 1 !== this.players.indexOf(player)
-              ? randomTarget
-              : undefined;
-        }
+        const { isExchange, targetPlayerNum } =
+          await player.triggerExchangeHands(this.players);
         if (isExchange && targetPlayerNum) {
           const exchange = player.exchangeHands(
             player,
@@ -121,7 +95,6 @@ export default class Game {
             this.round - 3 // change back after 3 rounds
           );
           this.addWaitingExchange(exchange);
-          player.usedExchange = true;
         }
       }
       // show the selected card
@@ -138,7 +111,7 @@ export default class Game {
   }
 
   public endGame(): void {
-    let winner: Player = this.players[0];
+    let winner: HumanPlayer | AIPlayer = this.players[0];
     console.log(`${winner.name}: ${winner.points} pts`);
     for (let i = 1; i < this.players.length; i += 1) {
       console.log(`${this.players[i].name}: ${this.players[i].points} pts`);

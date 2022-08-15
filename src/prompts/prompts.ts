@@ -1,9 +1,9 @@
 import prompts from "prompts";
-import Player from "../models/Player";
+import Player, { AIPlayer, HumanPlayer } from "../models/Player";
 
 export const promptOfExchangeHands = async (
-  players: Player[],
-  currPlayer: Player
+  players: Array<HumanPlayer | AIPlayer>,
+  currPlayer: HumanPlayer
 ) => {
   return prompts([
     {
@@ -30,4 +30,17 @@ export const promptOfExchangeHands = async (
       },
     },
   ]);
+};
+
+export const promptsOfCreatePlayer = async () => {
+  return prompts({
+    type: "number",
+    name: "humanCount",
+    message: `How many human players in this game? `,
+    validate: (name) => {
+      if (name < 1) return `Need at least 1 human player`;
+      if (name > 4) return `At most 4 players in a game`;
+      return true;
+    },
+  });
 };
