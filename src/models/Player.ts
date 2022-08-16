@@ -4,7 +4,11 @@ import Exchange from "./Exchange";
 import prompts from "prompts";
 import { SuitsSymbols } from "./Card";
 import { faker } from "@faker-js/faker";
-import { promptOfExchangeHands } from "../prompts/prompts";
+import {
+  promptOfExchangeHands,
+  promptsOfSelectCard,
+  promptsOfNameSelf,
+} from "../prompts/prompts";
 
 export default abstract class Player {
   private _name: string;
@@ -48,7 +52,7 @@ export default abstract class Player {
 
   protected abstract select(): Card | Promise<Card>;
 
-  protected printHandCards(): string {
+  public printHandCards(): string {
     let message = ``;
     this.hand.forEach((card, i) => {
       message += `\n${i + 1}. ${SuitsSymbols[card.suit]} ${card.rank}`;
@@ -109,39 +113,17 @@ export class HumanPlayer extends Player {
   constructor() {
     super();
   }
+
   protected async select(): Promise<Card> {
-    const userInput: number = await (async () => {
-      const res = await prompts({
-        type: "number",
-        name: "showCard",
-        message: `${this.printHandCards()}\n${
-          this.name
-        }: plz select the card you would like to show: `,
-        validate: (name) =>
-          name >= 1 && name <= this.hand.length ? true : "invalid number",
-      });
-      return res.showCard;
-    })();
-    const showCardIdx = userInput - 1;
+    const userInput = await promptsOfSelectCard(this);
+    const showCardIdx: number = userInput.showCard - 1;
     return this.hand.splice(showCardIdx, 1)[0];
   }
 
   public async nameSelf(): Promise<void> {
-    const userInput: string = await (async () => {
-      const res = await prompts({
-        type: "text",
-        name: "name",
-        message: "Plz enter your name (not more than 30 chars): ",
-        validate: (name: string) => {
-          return 0 < name.length && name.length <= 30
-            ? true
-            : `length of name cannot be longer than 30 chars`;
-        },
-      });
-      console.log(`Hi, ${res.name}!!`);
-      return res.name;
-    })();
-    this.name = userInput;
+    const userInput = await promptsOfNameSelf();
+    console.log(`Hi, ${userInput.name}!!`);
+    this.name = userInput.name;
   }
 
   public async triggerExchangeHands(players: Array<AIPlayer | HumanPlayer>) {

@@ -44,3 +44,28 @@ export const promptsOfCreatePlayer = async () => {
     },
   });
 };
+
+export const promptsOfSelectCard = async (player: Player) => {
+  return prompts({
+    type: "number",
+    name: "showCard",
+    message: `${player.printHandCards()}\n${
+      player.name
+    }: plz select the card you would like to show: `,
+    validate: (name) =>
+      name >= 1 && name <= player.hand.length ? true : "invalid number",
+  });
+};
+
+export const promptsOfNameSelf = async () => {
+  return prompts({
+    type: "text",
+    name: "name",
+    message: "Plz enter your name (not more than 30 chars): ",
+    validate: (name: string) => {
+      return 0 < name.length && name.length <= 30
+        ? true
+        : `length of name cannot be longer than 30 chars`;
+    },
+  });
+};
