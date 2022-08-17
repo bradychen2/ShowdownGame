@@ -25,10 +25,10 @@ export default class Exchange {
     const handOfInitiator = this.initiator.hand;
     this.initiator.hand = this.target.hand;
     this.target.hand = handOfInitiator;
-    for (let card of this.initiator.hand) {
+    for (const card of this.initiator.hand) {
       card.owner = this.initiator;
     }
-    for (let card of this.target.hand) {
+    for (const card of this.target.hand) {
       card.owner = this.target;
     }
   }

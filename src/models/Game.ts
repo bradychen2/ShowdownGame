@@ -1,14 +1,13 @@
-import internal from "stream";
 import Deck from "./Deck";
 import Exchange from "./Exchange";
-import Player, { HumanPlayer, AIPlayer } from "./Player";
+import { HumanPlayer, AIPlayer } from "./Player";
 import Card, { SuitsRanks, SuitsSymbols } from "./Card";
 import { promptsOfCreatePlayer } from "../prompts/prompts";
 
 export default class Game {
   private _players: Array<HumanPlayer | AIPlayer> = [];
   private _deck: Deck;
-  private _round: number = 13;
+  private _round = 13;
   private _waitingExchange: Exchange[] = [];
 
   constructor() {
@@ -17,7 +16,7 @@ export default class Game {
   private initDeck(): Deck {
     const deck = new Deck();
     const suits = ["spade", "heart", "diamond", "club"];
-    for (let suit of suits) {
+    for (const suit of suits) {
       for (let rank = 1; rank <= 13; rank += 1) {
         deck.addCard(new Card(rank, suit as SuitsRanks));
       }
@@ -49,7 +48,7 @@ export default class Game {
    */
   public async initGame(): Promise<void> {
     await this.createPlayers();
-    for (let player of this.players) {
+    for (const player of this.players) {
       await player.nameSelf();
     }
     this._deck.shuffle();
@@ -83,7 +82,7 @@ export default class Game {
     // check if any change back
     if (this._waitingExchange.length !== 0) this.triggerChangeBack();
 
-    for (let player of this.players) {
+    for (const player of this.players) {
       // if player hasn't used exchange yet, can decide to exchange hands with someone
       if (!player.usedExchange) {
         const { isExchange, targetPlayerNum } =
@@ -105,7 +104,7 @@ export default class Game {
     }
     this.displayShows(showCards);
     // the winner gets one point in this round
-    const winnerThisRound = Card.showdown(showCards, this.players);
+    const winnerThisRound = Card.showdown(showCards);
     winnerThisRound.gainPoints();
     this._round -= 1;
   }
@@ -138,7 +137,6 @@ export default class Game {
   private displayShows(showCards: Card[]): void {
     console.log("\r");
     for (let i = 0; i < showCards.length; i += 1) {
-      const player = this.players[i];
       const showCard = showCards[i];
       console.log(
         `${showCard.owner.name} shows: ${SuitsSymbols[showCard.suit]} ${

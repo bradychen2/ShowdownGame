@@ -4,7 +4,7 @@ export default class Deck {
   private _cards: Card[];
 
   constructor() {
-    this._cards = new Array();
+    this._cards = [];
   }
 
   public get cards(): Card[] {

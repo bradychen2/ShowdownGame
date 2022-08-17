@@ -1,7 +1,6 @@
 import Card from "./Card";
 import Deck from "./Deck";
 import Exchange from "./Exchange";
-import prompts from "prompts";
 import { SuitsSymbols } from "./Card";
 import { faker } from "@faker-js/faker";
 import {
@@ -13,8 +12,8 @@ import {
 export default abstract class Player {
   private _name: string;
   private _hand: Card[] = [];
-  private _points: number = 0;
-  private _usedExchange: boolean = false;
+  private _points = 0;
+  private _usedExchange = false;
 
   public get name(): string {
     return this._name;
@@ -98,10 +97,10 @@ export default abstract class Player {
     const handOfPlayer1 = player1.hand;
     player1.hand = player2.hand;
     player2.hand = handOfPlayer1;
-    for (let card of player1.hand) {
+    for (const card of player1.hand) {
       card.owner = player1;
     }
-    for (let card of player2.hand) {
+    for (const card of player2.hand) {
       card.owner = player2;
     }
     this.usedExchange = true;

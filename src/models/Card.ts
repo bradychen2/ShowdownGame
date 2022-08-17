@@ -50,7 +50,7 @@ export default class Card {
     }
   }
 
-  public static showdown(showCard: Card[], players: Player[]): Player {
+  public static showdown(showCard: Card[]): Player {
     let biggest: Card = showCard[0];
     showCard.forEach((card) => {
       if (biggest !== card) {
