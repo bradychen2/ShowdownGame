@@ -1,10 +1,15 @@
-import Card from "./Card";
-
+import Card, { SuitsRanks } from "./Card";
 export default class Deck {
   private _cards: Card[];
 
   constructor() {
     this._cards = [];
+    const suits = ["spade", "heart", "diamond", "club"];
+    for (const suit of suits) {
+      for (let rank = 1; rank <= 13; rank += 1) {
+        this.addCard(new Card(rank, suit as SuitsRanks));
+      }
+    }
   }
 
   public get cards(): Card[] {

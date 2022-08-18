@@ -1,7 +1,7 @@
 import Deck from "./Deck";
 import Exchange from "./Exchange";
 import { HumanPlayer, AIPlayer } from "./Player";
-import Card, { SuitsRanks, SuitsSymbols } from "./Card";
+import Card, { SuitsSymbols } from "./Card";
 import { promptsOfCreatePlayer } from "../prompts/prompts";
 
 export default class Game {
@@ -11,17 +11,7 @@ export default class Game {
   private _waitingExchange: Exchange[] = [];
 
   constructor() {
-    this._deck = this.initDeck();
-  }
-  private initDeck(): Deck {
-    const deck = new Deck();
-    const suits = ["spade", "heart", "diamond", "club"];
-    for (const suit of suits) {
-      for (let rank = 1; rank <= 13; rank += 1) {
-        deck.addCard(new Card(rank, suit as SuitsRanks));
-      }
-    }
-    return deck;
+    this._deck = new Deck();
   }
 
   /**
